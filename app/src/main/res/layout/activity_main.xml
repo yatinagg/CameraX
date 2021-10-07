@@ -1,0 +1,30 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:contentDescription="@string/image_preivew"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toTopOf="@+id/captureImg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/captureImg"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:contentDescription="@string/capture"
+        android:text="@string/capture_image"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/camera" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
