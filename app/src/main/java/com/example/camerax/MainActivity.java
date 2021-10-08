@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -59,13 +58,12 @@ public class MainActivity extends AppCompatActivity {
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-        cameraProviderFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                    bindPreview(cameraProvider);
-                } catch (Exception e) { }
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                bindPreview(cameraProvider);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, ContextCompat.getMainExecutor(this));
     }
@@ -80,31 +78,26 @@ public class MainActivity extends AppCompatActivity {
         preview.setSurfaceProvider(previewView.createSurfaceProvider());
         cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
 
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        captureButton.setOnClickListener(v -> {
 
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss", Locale.US);
-                String app_folder_path = Environment.getExternalStorageDirectory().toString() + "/images";
-                File file = new File(app_folder_path, dateFormat.format(new Date())+ ".jpg");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss", Locale.US);
+            String app_folder_path = Environment.getExternalStorageDirectory().toString() + "/images";
+            File file = new File(app_folder_path, dateFormat.format(new Date())+ ".jpg");
 
-                ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
-                imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback () {
-                    @Override
-                    public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show();
-                                System.out.println("Image Saved successfully");
-                                System.out.println(file);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onError(ImageCaptureException error) { }
-                });
-            }
+            ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
+            imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback () {
+                @Override
+                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show();
+                        System.out.println("Image Saved successfully");
+                        System.out.println(file);
+                    });
+                }
+                @Override
+                public void onError(@NonNull ImageCaptureException error) {
+                }
+            });
         });
     }
 
