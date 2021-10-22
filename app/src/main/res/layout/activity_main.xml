@@ -7,15 +7,15 @@
         android:id="@+id/camera"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:contentDescription="@string/image_preivew"
+        android:contentDescription="@string/image_preview"
         android:importantForAccessibility="no"
-        app:layout_constraintBottom_toTopOf="@+id/captureImg"
+        app:layout_constraintBottom_toTopOf="@+id/capture_img"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/captureImg"
+        android:id="@+id/capture_img"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:contentDescription="@string/capture"

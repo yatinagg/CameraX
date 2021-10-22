@@ -1,10 +1,12 @@
 package com.example.camerax;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -18,11 +20,11 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Executor executor;
     private final int REQUEST_CODE_PERMISSIONS = 1410;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    private final String[] REQUIRED_PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     private PreviewView previewView;
     private Button captureButton;
@@ -46,9 +48,9 @@ public class MainActivity extends AppCompatActivity {
         executor = Executors.newSingleThreadExecutor();
 
         previewView = findViewById(R.id.camera);
-        captureButton = findViewById(R.id.captureImg);
+        captureButton = findViewById(R.id.capture_img);
 
-        if(allPermissionsGranted())
+        if (allPermissionsGranted())
             startCamera();
         else
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
@@ -76,36 +78,38 @@ public class MainActivity extends AppCompatActivity {
         ImageCapture imageCapture = builder.setTargetRotation(this.getWindowManager().getDefaultDisplay().getRotation()).build();
 
         preview.setSurfaceProvider(previewView.createSurfaceProvider());
-        cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
 
         captureButton.setOnClickListener(v -> {
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss", Locale.US);
-            String app_folder_path = Environment.getExternalStorageDirectory().toString() + "/images";
-            File file = new File(app_folder_path, dateFormat.format(new Date())+ ".jpg");
+            File externalFilesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            try {
+                File file = File.createTempFile(dateFormat.format(new Date()), ".jpg", externalFilesDir);
 
-            ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
-            imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback () {
-                @Override
-                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show();
-                        System.out.println("Image Saved successfully");
-                        System.out.println(file);
-                    });
-                }
-                @Override
-                public void onError(@NonNull ImageCaptureException error) {
-                }
-            });
+                ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
+                imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show());
+                    }
+
+                    @Override
+                    public void onError(@NonNull ImageCaptureException error) {
+                        Log.d("output", "error occurred" + error);
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
     }
 
-    private boolean allPermissionsGranted(){
-        for(String permission : REQUIRED_PERMISSIONS)
-            if(ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED){
+    private boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS)
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
-        }
+            }
         return true;
     }
 
